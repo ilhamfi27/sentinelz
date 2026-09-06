@@ -1,7 +1,12 @@
 export * from './core/types';
 export * from './core/errors';
 export { Sentinelz } from './core/enforcer';
+export { ISentinelz } from './core/enforcer.interface';
 export { SentinelzFactory } from './factory/sentinelz.factory';
 export { CasbinAdapter } from './adapters/adapter.abstract';
 export { SqlCasbinAdapter } from './adapters/sql.adapter';
 export { MongoCasbinAdapter } from './adapters/mongo.adapter';
+export { ICache } from './cache/cache.interface';
+export { MemoryCache } from './cache/memory.cache';
+export { RedisCache } from './cache/redis.cache';
+export { CachedSentinelz } from './cache/cached-sentinelz';

@@ -1,13 +1,14 @@
 import { Enforcer, newEnforcer } from 'casbin';
 import { CasbinAdapter } from '../adapters/adapter.abstract';
 import { EnforcementError, PolicyManagementError } from './errors';
+import { ISentinelz } from './enforcer.interface';
 
 /**
  * The only class application code talks to for enforcement/policy/role ops.
  * Construction goes through `Sentinelz.init()` (used by SentinelzFactory) since
  * building the underlying Casbin enforcer is async.
  */
-export class Sentinelz {
+export class Sentinelz implements ISentinelz {
   private constructor(
     private readonly enforcer: Enforcer,
     private readonly adapter: CasbinAdapter,

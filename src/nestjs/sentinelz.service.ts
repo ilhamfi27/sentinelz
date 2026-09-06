@@ -1,5 +1,5 @@
 import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { Sentinelz } from '../core/enforcer';
+import { ISentinelz } from '../core/enforcer.interface';
 import { SentinelzFactory } from '../factory/sentinelz.factory';
 import { ISentinelzConfig } from '../core/types';
 import { SENTINELZ_CONFIG } from './constants';
@@ -7,7 +7,7 @@ import { SENTINELZ_CONFIG } from './constants';
 /** Thin delegate to a `Sentinelz` instance built via `SentinelzFactory` on module init. */
 @Injectable()
 export class SentinelzService implements OnModuleInit, OnModuleDestroy {
-  private sentinelz!: Sentinelz;
+  private sentinelz!: ISentinelz;
 
   constructor(@Inject(SENTINELZ_CONFIG) private readonly config: ISentinelzConfig) {}
 
