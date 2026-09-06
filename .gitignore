@@ -1,0 +1,9 @@
+node_modules/
+dist/
+coverage/
+*.log
+.env
+.env.local
+
+# local dev guidance, not for publishing
+CLAUDE.md

@@ -1,0 +1,1 @@
+export const SENTINELZ_CONFIG = 'SENTINELZ_CONFIG';
