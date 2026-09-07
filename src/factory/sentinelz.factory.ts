@@ -10,7 +10,7 @@ import { defaultModelPath } from '../utils/default-model';
 /** The only place adapter selection happens (with adapter-registry.ts). */
 export class SentinelzFactory {
   static async create(config: ISentinelzConfig): Promise<ISentinelz> {
-    const adapter = createAdapter(config.adapter, config.adapterConfig);
+    const adapter = createAdapter(config);
     const autoMigrate = config.migrate?.auto ?? true;
     if (autoMigrate) {
       await adapter.migrate();

@@ -1,4 +1,4 @@
-# sentinelz
+# Sentinelz
 
 ## What is this?
 
