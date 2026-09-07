@@ -5,6 +5,7 @@ import { createAdapter } from '../adapters/adapter-registry';
 import { parseConfigFromEnv, parseConfigFromFile } from '../utils/config.parser';
 import { createCache } from '../cache/create-cache';
 import { CachedSentinelz } from '../cache/cached-sentinelz';
+import { defaultModelPath } from '../utils/default-model';
 
 /** The only place adapter selection happens (with adapter-registry.ts). */
 export class SentinelzFactory {
@@ -14,7 +15,8 @@ export class SentinelzFactory {
     if (autoMigrate) {
       await adapter.migrate();
     }
-    const sentinelz = await Sentinelz.init(config.modelPath, adapter);
+    const modelPath = config.modelPath ?? defaultModelPath();
+    const sentinelz = await Sentinelz.init(modelPath, adapter);
 
     if (config.cache?.enabled) {
       const cache = createCache(config.cache);

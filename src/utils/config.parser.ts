@@ -13,7 +13,8 @@ function required(name: string): string {
 /** Reads `SENTINELZ_*` env vars into an `ISentinelzConfig` (see docs/idea/0-plan.md reference table). */
 export function parseConfigFromEnv(modelPathOverride?: string): ISentinelzConfig {
   const adapter = (process.env.SENTINELZ_ADAPTER ?? 'sql') as AdapterKind;
-  const modelPath = modelPathOverride ?? required('SENTINELZ_MODEL_PATH');
+  // Undefined here is fine — SentinelzFactory.create() falls back to the bundled default model.
+  const modelPath = modelPathOverride ?? process.env.SENTINELZ_MODEL_PATH;
   const migrateAuto = process.env.SENTINELZ_MIGRATE_AUTO !== 'false';
 
   let adapterConfig: SqlAdapterConfig | MongoAdapterConfig;
@@ -61,9 +62,9 @@ export function parseConfigFromEnv(modelPathOverride?: string): ISentinelzConfig
 export function parseConfigFromFile(configPath: string): ISentinelzConfig {
   const raw = fs.readFileSync(configPath, 'utf-8');
   const parsed = JSON.parse(raw) as ISentinelzConfig;
-  if (!parsed.modelPath || !parsed.adapter || !parsed.adapterConfig) {
+  if (!parsed.adapter || !parsed.adapterConfig) {
     throw new AdapterInitializationError(
-      `Config file at "${configPath}" is missing required fields: modelPath, adapter, adapterConfig`,
+      `Config file at "${configPath}" is missing required fields: adapter, adapterConfig`,
     );
   }
   return parsed;

@@ -44,7 +44,12 @@ export interface MultiTenantOptions {
 }
 
 export interface ISentinelzConfig {
-  modelPath: string;
+  /**
+   * Path to a Casbin model file. Optional — defaults to the bundled plain
+   * RBAC model (sub, obj, act + roles), which covers the common case with
+   * zero configuration. Only provide your own for ABAC/custom matchers.
+   */
+  modelPath?: string;
   adapter: AdapterKind;
   adapterConfig: AdapterConfig;
   migrate?: MigrateOptions;

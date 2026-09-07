@@ -48,3 +48,39 @@ describe('SentinelzFactory cache wiring', () => {
     await sentinelz.close();
   });
 });
+
+describe('SentinelzFactory default model path', () => {
+  it('enforces correctly when modelPath is omitted (falls back to the bundled RBAC model)', async () => {
+    const sentinelz = await SentinelzFactory.create({
+      adapter: 'sql',
+      adapterConfig: { client: 'sqlite3', connection: { filename: ':memory:' } },
+    });
+
+    await sentinelz.addPolicy('alice', 'articles', 'write');
+    await sentinelz.addRole('bob', 'admin');
+    await sentinelz.addPolicy('admin', 'articles', 'write');
+
+    expect(await sentinelz.enforce('alice', 'articles', 'write')).toBe(true);
+    expect(await sentinelz.enforce('bob', 'articles', 'write')).toBe(true); // via role
+    expect(await sentinelz.enforce('carol', 'articles', 'write')).toBe(false);
+
+    await sentinelz.close();
+  });
+
+  it('createFromEnv() also falls back to the bundled model when SENTINELZ_MODEL_PATH is unset', async () => {
+    const originalEnv = { ...process.env };
+    delete process.env.SENTINELZ_MODEL_PATH;
+    process.env.SENTINELZ_ADAPTER = 'sql';
+    process.env.SENTINELZ_SQL_CLIENT = 'sqlite3';
+    process.env.SENTINELZ_DATABASE_URL = ':memory:';
+
+    try {
+      const sentinelz = await SentinelzFactory.createFromEnv();
+      await sentinelz.addPolicy('alice', 'articles', 'write');
+      expect(await sentinelz.enforce('alice', 'articles', 'write')).toBe(true);
+      await sentinelz.close();
+    } finally {
+      process.env = originalEnv;
+    }
+  });
+});

@@ -2,6 +2,7 @@
   "name": "sentinelz",
   "version": "0.1.0",
   "description": "Unified Casbin RBAC/ABAC wrapper with SQL + MongoDB adapters and bundled migrations",
+  "author": "Ilham Fadhilah",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -25,13 +26,11 @@
     "nestjs"
   ],
   "license": "MIT",
-  "peerDependencies": {
-    "casbin": "^5.0.0"
+  "engines": {
+    "node": ">=18.18.0"
   },
-  "peerDependenciesMeta": {
-    "casbin": {
-      "optional": false
-    }
+  "dependencies": {
+    "casbin": "^5.30.0"
   },
   "optionalDependencies": {
     "@nestjs/common": "^10.3.0",
@@ -48,10 +47,11 @@
     "@nestjs/common": "^10.3.0",
     "@nestjs/core": "^10.3.0",
     "@nestjs/platform-express": "^10.3.0",
+    "@semantic-release/changelog": "^7.0.0",
+    "@semantic-release/git": "^11.0.1",
     "@types/express": "^4.17.21",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.0",
-    "casbin": "^5.30.0",
     "jest": "^29.7.0",
     "knex": "^3.1.0",
     "mongoose": "^8.2.0",
@@ -60,6 +60,7 @@
     "redis": "^4.6.0",
     "reflect-metadata": "^0.2.1",
     "rxjs": "^7.8.1",
+    "semantic-release": "^25.0.9",
     "sqlite3": "^5.1.7",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
@@ -72,6 +73,7 @@
     "test:nestjs": "jest tests/nestjs",
     "test:integration": "jest --config jest.integration.config.js",
     "lint": "tsc --noEmit -p tsconfig.json",
-    "prepublishOnly": "npm run build && npm run test"
+    "prepublishOnly": "npm run build && npm run test",
+    "release": "semantic-release"
   }
 }
