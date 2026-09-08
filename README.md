@@ -206,26 +206,49 @@ export class ArticlesController {
 
 ## API
 
-```typescript
-class Sentinelz {
-  enforce(...args: string[]): Promise<boolean>;
-  addPolicy(...args: string[]): Promise<boolean>;
-  removePolicy(...args: string[]): Promise<boolean>;
-  updatePolicy(oldPolicy: string[], newPolicy: string[]): Promise<boolean>;
-  getPolicy(): Promise<string[][]>;
-  getPoliciesForUser(user: string): Promise<string[][]>;
-  addRole(user: string, role: string): Promise<boolean>;
-  removeRole(user: string, role: string): Promise<boolean>;
-  getRolesForUser(user: string): Promise<string[]>;
-  getUsersForRole(role: string): Promise<string[]>;
-  getAllRoles(): Promise<string[]>;
-  loadPolicy(): Promise<void>;
-  savePolicy(): Promise<void>;
-  clearPolicy(): Promise<void>;
-  migrate(): Promise<void>;
-  close(): Promise<void>;
-}
+### What `...args` actually means
 
+A handful of methods below take `...args: string[]` instead of named parameters. That's not vagueness — it's because the shape depends on which Casbin model you're using (see [Custom permission model](#custom-permission-model-advanced--abac)), so the method can't hardcode parameter names that would only be right for one model.
+
+**With the bundled default model** (which is what you're using unless you passed a custom `modelPath`), every one of these is always a `(subject, object, action)` triple:
+
+```typescript
+await sentinelz.enforce('alice', 'articles', 'write');
+//                        ^subject  ^object    ^action
+// "Is alice allowed to write articles?"
+
+await sentinelz.addPolicy('alice', 'articles', 'write');
+// "Grant alice permission to write articles" — same 3 positions, different verb
+```
+
+If you bring your own ABAC model, the number and meaning of the arguments follows whatever you defined in that model's `[request_definition]`/`[policy_definition]` instead — `sentinelz` just passes them through to Casbin.
+
+### `Sentinelz` (the instance you get back from `SentinelzFactory.create()`)
+
+| Method | What it does |
+| --- | --- |
+| `enforce(...args)` → `boolean` | The core check: is this request allowed? |
+| `addPolicy(...args)` → `boolean` | Grants a permission directly to a subject (not via a role) |
+| `removePolicy(...args)` → `boolean` | Revokes a permission added with `addPolicy` |
+| `updatePolicy(oldRule, newRule)` → `boolean` | Swaps one policy rule for another in one call |
+| `getPolicy()` → `string[][]` | Every policy rule currently loaded |
+| `getPoliciesForUser(user)` → `string[][]` | Rules that apply directly to one subject |
+| `addRole(user, role)` → `boolean` | Assigns a role to a subject — grant the role itself permissions via `addPolicy(role, obj, act)`, and every subject with that role inherits them |
+| `removeRole(user, role)` → `boolean` | Removes a role assignment (the role's own policies are untouched) |
+| `getRolesForUser(user)` → `string[]` | Every role assigned to a subject |
+| `getUsersForRole(role)` → `string[]` | Every subject assigned to a role |
+| `getAllRoles()` → `string[]` | Every role name that appears anywhere in the current policies |
+| `loadPolicy()` → `void` | Reloads policies from storage into memory |
+| `savePolicy()` → `void` | Persists the current in-memory policies to storage |
+| `clearPolicy()` → `void` | Empties the in-memory policy set (storage untouched until you `savePolicy()`) |
+| `migrate()` → `void` | Runs the adapter's schema setup explicitly (see [Migrations](#migrations)) |
+| `close()` → `void` | Closes the underlying database connection |
+
+Full type signatures (with per-method doc comments — these show up on hover in your editor too) live in [`src/core/enforcer.interface.ts`](./src/core/enforcer.interface.ts).
+
+### `SentinelzFactory`
+
+```typescript
 class SentinelzFactory {
   static create(config: ISentinelzConfig): Promise<ISentinelz>;
   static createFromEnv(modelPath?: string): Promise<ISentinelz>;
