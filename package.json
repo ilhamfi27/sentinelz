@@ -1,6 +1,6 @@
 {
   "name": "sentinelz",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Unified Casbin RBAC/ABAC wrapper with SQL + MongoDB adapters and bundled migrations",
   "author": "Ilham Fadhilah",
   "main": "dist/index.js",
