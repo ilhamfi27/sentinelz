@@ -5,6 +5,14 @@
   "author": "Ilham Fadhilah",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "repository": {
+  "type": "git",
+  "url": "git+https://github.com/ilhamfi27/sentinelz.git"
+  },
+  "homepage": "https://github.com/ilhamfi27/sentinelz#readme",
+  "bugs": {
+    "url": "https://github.com/ilhamfi27/sentinelz/issues"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
