@@ -1,3 +1,15 @@
+# [1.1.0](https://github.com/ilhamfi27/sentinelz/compare/v1.0.0...v1.1.0) (2026-10-01)
+
+
+### Bug Fixes
+
+* update repository metadata in package.json ([44cd316](https://github.com/ilhamfi27/sentinelz/commit/44cd316958da747145f4cd77714c3a1beb83227f))
+
+
+### Features
+
+* add loadFilteredPolicy and isFiltered methods to CachedSentinelz and Sentinelz classes ([957bcfd](https://github.com/ilhamfi27/sentinelz/commit/957bcfda75bb078abbbcec119831041b8ff421bb))
+
 # 1.0.0 (2026-09-08)
 
 
