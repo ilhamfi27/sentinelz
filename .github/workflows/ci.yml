@@ -69,6 +69,8 @@ jobs:
 
       - run: yarn install --frozen-lockfile
 
+      - run: yarn format:check
+
       - run: yarn build
 
       - run: yarn test

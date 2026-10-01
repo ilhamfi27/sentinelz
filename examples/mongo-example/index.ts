@@ -12,8 +12,14 @@ async function main() {
 
   await sentinelz.addPolicy('alice', 'articles', 'write');
 
-  console.log('alice can write articles:', await sentinelz.enforce('alice', 'articles', 'write'));
-  console.log('bob can write articles:', await sentinelz.enforce('bob', 'articles', 'write'));
+  console.log(
+    'alice can write articles:',
+    await sentinelz.enforce('alice', 'articles', 'write'),
+  );
+  console.log(
+    'bob can write articles:',
+    await sentinelz.enforce('bob', 'articles', 'write'),
+  );
 
   await sentinelz.close();
 }

@@ -49,7 +49,7 @@ await sentinelz.addRole('bob', 'admin');
 
 // Now check permissions anywhere in your app:
 await sentinelz.enforce('alice', 'articles', 'write'); // true (direct policy)
-await sentinelz.enforce('bob', 'articles', 'write');   // true (via admin role)
+await sentinelz.enforce('bob', 'articles', 'write'); // true (via admin role)
 await sentinelz.enforce('carol', 'articles', 'write'); // false (no policy, no role)
 ```
 
@@ -101,10 +101,10 @@ m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act
 
 One adapter per storage family — not per ORM:
 
-| Adapter | Backed by | Covers |
-| --- | --- | --- |
-| `sql` | [Knex](https://knexjs.org) | PostgreSQL, MySQL, SQLite, MS SQL Server — pick the dialect via `client` |
-| `mongo` | [Mongoose](https://mongoosejs.com) | MongoDB |
+| Adapter | Backed by                          | Covers                                                                   |
+| ------- | ---------------------------------- | ------------------------------------------------------------------------ |
+| `sql`   | [Knex](https://knexjs.org)         | PostgreSQL, MySQL, SQLite, MS SQL Server — pick the dialect via `client` |
+| `mongo` | [Mongoose](https://mongoosejs.com) | MongoDB                                                                  |
 
 ```typescript
 // Postgres
@@ -144,8 +144,10 @@ Both adapters own their schema and run it automatically on `SentinelzFactory.cre
 
 ```typescript
 // Explicit config (shown above), or:
-const sentinelz = await SentinelzFactory.createFromEnv();   // reads SENTINELZ_* env vars
-const sentinelz = await SentinelzFactory.createFromFile('./sentinelz.config.json');
+const sentinelz = await SentinelzFactory.createFromEnv(); // reads SENTINELZ_* env vars
+const sentinelz = await SentinelzFactory.createFromFile(
+  './sentinelz.config.json',
+);
 ```
 
 See `.env.example` for the full `SENTINELZ_*` environment variable reference.
@@ -160,7 +162,7 @@ const sentinelz = await SentinelzFactory.create({
   adapterConfig: { client: 'pg', connection: process.env.DATABASE_URL },
   cache: {
     enabled: true,
-    type: 'redis',          // or 'memory' for an in-process fallback
+    type: 'redis', // or 'memory' for an in-process fallback
     ttl: 300,
     redisUrl: process.env.REDIS_URL,
   },
@@ -225,26 +227,47 @@ If you bring your own ABAC model, the number and meaning of the arguments follow
 
 ### `Sentinelz` (the instance you get back from `SentinelzFactory.create()`)
 
-| Method | What it does |
-| --- | --- |
-| `enforce(...args)` → `boolean` | The core check: is this request allowed? |
-| `addPolicy(...args)` → `boolean` | Grants a permission directly to a subject (not via a role) |
-| `removePolicy(...args)` → `boolean` | Revokes a permission added with `addPolicy` |
-| `updatePolicy(oldRule, newRule)` → `boolean` | Swaps one policy rule for another in one call |
-| `getPolicy()` → `string[][]` | Every policy rule currently loaded |
-| `getPoliciesForUser(user)` → `string[][]` | Rules that apply directly to one subject |
-| `addRole(user, role)` → `boolean` | Assigns a role to a subject — grant the role itself permissions via `addPolicy(role, obj, act)`, and every subject with that role inherits them |
-| `removeRole(user, role)` → `boolean` | Removes a role assignment (the role's own policies are untouched) |
-| `getRolesForUser(user)` → `string[]` | Every role assigned to a subject |
-| `getUsersForRole(role)` → `string[]` | Every subject assigned to a role |
-| `getAllRoles()` → `string[]` | Every role name that appears anywhere in the current policies |
-| `loadPolicy()` → `void` | Reloads policies from storage into memory |
-| `savePolicy()` → `void` | Persists the current in-memory policies to storage |
-| `clearPolicy()` → `void` | Empties the in-memory policy set (storage untouched until you `savePolicy()`) |
-| `migrate()` → `void` | Runs the adapter's schema setup explicitly (see [Migrations](#migrations)) |
-| `close()` → `void` | Closes the underlying database connection |
+| Method                                       | What it does                                                                                                                                    |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `enforce(...args)` → `boolean`               | The core check: is this request allowed?                                                                                                        |
+| `addPolicy(...args)` → `boolean`             | Grants a permission directly to a subject (not via a role)                                                                                      |
+| `removePolicy(...args)` → `boolean`          | Revokes a permission added with `addPolicy`                                                                                                     |
+| `updatePolicy(oldRule, newRule)` → `boolean` | Swaps one policy rule for another in one call                                                                                                   |
+| `getPolicy()` → `string[][]`                 | Every policy rule currently loaded                                                                                                              |
+| `getPoliciesForUser(user)` → `string[][]`    | Rules that apply directly to one subject                                                                                                        |
+| `addRole(user, role)` → `boolean`            | Assigns a role to a subject — grant the role itself permissions via `addPolicy(role, obj, act)`, and every subject with that role inherits them |
+| `removeRole(user, role)` → `boolean`         | Removes a role assignment (the role's own policies are untouched)                                                                               |
+| `getRolesForUser(user)` → `string[]`         | Every role assigned to a subject                                                                                                                |
+| `getUsersForRole(role)` → `string[]`         | Every subject assigned to a role                                                                                                                |
+| `getAllRoles()` → `string[]`                 | Every role name that appears anywhere in the current policies                                                                                   |
+| `loadPolicy()` → `void`                      | Reloads policies from storage into memory                                                                                                       |
+| `loadFilteredPolicy(filter)` → `void`        | Loads only the rules matching `filter` instead of the whole table (see [Filtered policy loading](#filtered-policy-loading))                     |
+| `isFiltered()` → `boolean`                   | True while a filtered subset is loaded                                                                                                          |
+| `savePolicy()` → `void`                      | Persists the current in-memory policies to storage                                                                                              |
+| `clearPolicy()` → `void`                     | Empties the in-memory policy set (storage untouched until you `savePolicy()`)                                                                   |
+| `migrate()` → `void`                         | Runs the adapter's schema setup explicitly (see [Migrations](#migrations))                                                                      |
+| `close()` → `void`                           | Closes the underlying database connection                                                                                                       |
 
 Full type signatures (with per-method doc comments — these show up on hover in your editor too) live in [`src/core/enforcer.interface.ts`](./src/core/enforcer.interface.ts).
+
+### Filtered policy loading
+
+By default every rule is loaded into memory. For large rule tables, load just what you need:
+
+```typescript
+// Rules for alice, plus the role (`g`) rows and role permissions she inherits
+await sentinelz.loadFilteredPolicy({
+  ptype: ['p', 'g'],
+  v0: ['alice', 'admin'],
+});
+```
+
+A `PolicyFilter` has `ptype` (`'p'` rules vs `'g'` role assignments) and `v0`..`v5` (the rule's positional values — with the default model, `v0` is the subject, `v1` the object, `v2` the action). Each field is a list of accepted values; fields are ANDed; omitted fields don't constrain.
+
+- **Include the `g` rows and role subjects.** If you filter only `p` rows for `alice`, her role assignments aren't loaded and inherited permissions silently disappear.
+- **`savePolicy()` throws while filtered** (saving would overwrite storage with the loaded subset). Call `loadPolicy()` to return to the full set.
+- `addPolicy`/`removePolicy`/`addRole`/… still write through to storage as usual.
+- This is runtime-only: there is no startup/config option, so the instance always boots with the full policy set.
 
 ### `SentinelzFactory`
 

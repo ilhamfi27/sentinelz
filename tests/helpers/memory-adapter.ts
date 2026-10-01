@@ -1,5 +1,6 @@
 import { Helper, Model } from 'casbin';
 import { CasbinAdapter } from '../../src/adapters/adapter.abstract';
+import { PolicyFilter } from '../../src/core/types';
 
 interface Rule {
   ptype: string;
@@ -10,6 +11,7 @@ interface Rule {
 export class MemoryCasbinAdapter extends CasbinAdapter {
   private rules: Rule[] = [];
   migrateCalls = 0;
+  private filtered = false;
 
   async migrate(): Promise<void> {
     this.migrateCalls += 1;
@@ -19,6 +21,30 @@ export class MemoryCasbinAdapter extends CasbinAdapter {
     for (const rule of this.rules) {
       Helper.loadPolicyLine([rule.ptype, ...rule.values].join(', '), model);
     }
+    this.filtered = false;
+  }
+
+  async loadFilteredPolicy(model: Model, filter: PolicyFilter): Promise<void> {
+    const columns = ['v0', 'v1', 'v2', 'v3', 'v4', 'v5'] as const;
+    for (const rule of this.rules) {
+      const ptypeOk =
+        !filter.ptype?.length || filter.ptype.includes(rule.ptype);
+      const valuesOk = columns.every((col, i) => {
+        const accepted = filter[col];
+        return (
+          !accepted?.length ||
+          (rule.values[i] !== undefined && accepted.includes(rule.values[i]))
+        );
+      });
+      if (ptypeOk && valuesOk) {
+        Helper.loadPolicyLine([rule.ptype, ...rule.values].join(', '), model);
+      }
+    }
+    this.filtered = true;
+  }
+
+  isFiltered(): boolean {
+    return this.filtered;
   }
 
   async savePolicy(model: Model): Promise<boolean> {
@@ -40,10 +66,18 @@ export class MemoryCasbinAdapter extends CasbinAdapter {
     this.rules.push({ ptype, values: rule });
   }
 
-  async removePolicy(_sec: string, ptype: string, rule: string[]): Promise<void> {
+  async removePolicy(
+    _sec: string,
+    ptype: string,
+    rule: string[],
+  ): Promise<void> {
     this.rules = this.rules.filter(
       (r) =>
-        !(r.ptype === ptype && r.values.length === rule.length && r.values.every((v, i) => v === rule[i])),
+        !(
+          r.ptype === ptype &&
+          r.values.length === rule.length &&
+          r.values.every((v, i) => v === rule[i])
+        ),
     );
   }
 
@@ -62,7 +96,11 @@ export class MemoryCasbinAdapter extends CasbinAdapter {
     });
   }
 
-  async removePolicies(sec: string, ptype: string, rules: string[][]): Promise<void> {
+  async removePolicies(
+    sec: string,
+    ptype: string,
+    rules: string[][],
+  ): Promise<void> {
     for (const rule of rules) {
       await this.removePolicy(sec, ptype, rule);
     }

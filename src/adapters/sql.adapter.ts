@@ -1,19 +1,28 @@
-import type { Knex } from "knex";
-import { Helper, Model } from "casbin";
-import { CasbinAdapter } from "./adapter.abstract";
-import { CasbinRuleRow, SqlAdapterConfig } from "../core/types";
-import { AdapterInitializationError, MigrationError } from "../core/errors";
-import { ensureCasbinRuleTable } from "../migrations/sql/create-casbin-rule";
-import { logger } from "../utils/logger";
-import { DEFAULT_TABLE_NAME, RULE_COLUMNS, RuleColumn } from "../constants/db";
-import { ruleRowFromArgs } from "../utils/db.adapter";
+import type { Knex } from 'knex';
+import { Helper, Model } from 'casbin';
+import { CasbinAdapter } from './adapter.abstract';
+import { CasbinRuleRow, PolicyFilter, SqlAdapterConfig } from '../core/types';
+import {
+  AdapterInitializationError,
+  MigrationError,
+  PolicyManagementError,
+} from '../core/errors';
+import { ensureCasbinRuleTable } from '../migrations/sql/create-casbin-rule';
+import { logger } from '../utils/logger';
+import { DEFAULT_TABLE_NAME, RULE_COLUMNS, RuleColumn } from '../constants/db';
+import {
+  activeFilterEntries,
+  ruleRowFromArgs,
+  ruleToLine,
+} from '../utils/db.adapter';
 
 export class SqlCasbinAdapter extends CasbinAdapter {
   private readonly db: Knex;
   private readonly tableName: string;
   private readonly schema?: string;
   private readonly createSchemaIfMissing: boolean;
-  private readonly client: SqlAdapterConfig["client"];
+  private readonly client: SqlAdapterConfig['client'];
+  private filtered = false;
 
   constructor(config: SqlAdapterConfig) {
     super();
@@ -24,7 +33,7 @@ export class SqlCasbinAdapter extends CasbinAdapter {
 
     if (
       this.schema &&
-      (config.client === "sqlite3" || config.client === "mysql2")
+      (config.client === 'sqlite3' || config.client === 'mysql2')
     ) {
       logger.warn(
         `SqlAdapterConfig.schema is ignored for client "${config.client}" (no schema concept)`,
@@ -34,23 +43,23 @@ export class SqlCasbinAdapter extends CasbinAdapter {
     let knexFactory: (config: Knex.Config) => Knex;
     try {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      knexFactory = require("knex");
+      knexFactory = require('knex');
     } catch {
       throw new AdapterInitializationError(
         'The "knex" package is required for the sql adapter. Install it with `npm install knex` ' +
-          "plus the driver for your dialect (pg/mysql2/sqlite3/tedious).",
+          'plus the driver for your dialect (pg/mysql2/sqlite3/tedious).',
       );
     }
 
     this.db = knexFactory({
       client: config.client,
       connection: config.connection,
-      useNullAsDefault: config.client === "sqlite3",
+      useNullAsDefault: config.client === 'sqlite3',
     });
   }
 
   private get effectiveSchema(): string | undefined {
-    if (this.client === "sqlite3" || this.client === "mysql2") return undefined;
+    if (this.client === 'sqlite3' || this.client === 'mysql2') return undefined;
     return this.schema;
   }
 
@@ -78,16 +87,35 @@ export class SqlCasbinAdapter extends CasbinAdapter {
   async loadPolicy(model: Model): Promise<void> {
     const rows = await this.table().select();
     for (const row of rows) {
-      const line = [row.ptype, ...RULE_COLUMNS.map((col) => row[col])]
-        .filter((value) => value !== undefined && value !== null)
-        .join(", ");
-      Helper.loadPolicyLine(line, model);
+      Helper.loadPolicyLine(ruleToLine(row), model);
     }
+    this.filtered = false;
+  }
+
+  async loadFilteredPolicy(model: Model, filter: PolicyFilter): Promise<void> {
+    let qb = this.table().select();
+    for (const [column, values] of activeFilterEntries(filter)) {
+      qb = qb.whereIn(column, values);
+    }
+    const rows = await qb;
+    for (const row of rows) {
+      Helper.loadPolicyLine(ruleToLine(row), model);
+    }
+    this.filtered = true;
+  }
+
+  isFiltered(): boolean {
+    return this.filtered;
   }
 
   async savePolicy(model: Model): Promise<boolean> {
+    if (this.filtered) {
+      // Saving deletes the whole table then re-inserts the in-memory set —
+      // with only a filtered subset loaded, that would wipe every other rule.
+      throw new PolicyManagementError('Cannot save a filtered policy');
+    }
     const rows: CasbinRuleRow[] = [];
-    for (const sec of ["p", "g"]) {
+    for (const sec of ['p', 'g']) {
       const astMap = model.model.get(sec);
       if (!astMap) continue;
       for (const [ptype, ast] of astMap) {
@@ -135,7 +163,7 @@ export class SqlCasbinAdapter extends CasbinAdapter {
       const columnIndex = fieldIndex + i;
       if (
         value !== undefined &&
-        value !== "" &&
+        value !== '' &&
         columnIndex < RULE_COLUMNS.length
       ) {
         qb = qb.andWhere(RULE_COLUMNS[columnIndex] as RuleColumn, value);

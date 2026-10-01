@@ -11,7 +11,8 @@ export function createCache(options: CacheOptions): ICache {
       // Lazy-required so consumers who use the memory cache never load "redis".
       // options.redisUrl is guaranteed present here — CacheOptions's 'redis'
       // branch requires it, so there's no runtime check to do.
-      const { RedisCache } = require('./redis.cache') as typeof import('./redis.cache');
+      const { RedisCache } =
+        require('./redis.cache') as typeof import('./redis.cache');
       return new RedisCache(options.redisUrl);
     }
     default: {

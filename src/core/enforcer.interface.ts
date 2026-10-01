@@ -1,3 +1,5 @@
+import type { PolicyFilter } from './types';
+
 /**
  * Public surface of `Sentinelz`. Exists so decorators (cache, audit) can wrap
  * a `Sentinelz` instance via composition without subclassing it — `Sentinelz`
@@ -73,6 +75,28 @@ export interface ISentinelz {
 
   /** Reloads policies from the adapter's storage into memory, discarding any unsaved in-memory changes. */
   loadPolicy(): Promise<void>;
+
+  /**
+   * Replaces the in-memory policy set with only the rules matching `filter`,
+   * instead of loading the whole table. Useful for large rule tables or
+   * per-tenant/per-user loading.
+   *
+   * Caveats:
+   * - Include the `g` (role assignment) rows a subject needs, or role
+   *   inheritance silently stops working for it — e.g. to check alice, load
+   *   her own `p` rows, her `g` rows, and the `p` rows of every role she has.
+   * - `savePolicy()` throws while a filtered policy is loaded (saving would
+   *   overwrite the stored rules with the loaded subset). Call `loadPolicy()`
+   *   to go back to the full set.
+   * - `addPolicy`/`removePolicy`/etc. still write through to storage.
+   *
+   * @example
+   * await sentinelz.loadFilteredPolicy({ ptype: ['p', 'g'], v0: ['alice', 'admin'] });
+   */
+  loadFilteredPolicy(filter: PolicyFilter): Promise<void>;
+
+  /** True if the loaded policy is a filtered subset (see `loadFilteredPolicy`). */
+  isFiltered(): boolean;
 
   /** Persists the current in-memory policies to the adapter's storage. */
   savePolicy(): Promise<void>;

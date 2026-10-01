@@ -1,4 +1,10 @@
-import { DynamicModule, FactoryProvider, Module, ModuleMetadata, Provider } from '@nestjs/common';
+import {
+  DynamicModule,
+  FactoryProvider,
+  Module,
+  ModuleMetadata,
+  Provider,
+} from '@nestjs/common';
 import { ISentinelzConfig } from '../core/types';
 import { SentinelzService } from './sentinelz.service';
 import { SENTINELZ_CONFIG } from './constants';
@@ -10,7 +16,9 @@ export type SentinelzModuleConfig = ISentinelzConfig;
 export interface SentinelzModuleAsyncConfig {
   imports?: ModuleMetadata['imports'];
   inject?: FactoryProvider<ISentinelzConfig>['inject'];
-  useFactory: (...args: unknown[]) => Promise<ISentinelzConfig> | ISentinelzConfig;
+  useFactory: (
+    ...args: unknown[]
+  ) => Promise<ISentinelzConfig> | ISentinelzConfig;
 }
 
 @Module({})
@@ -18,7 +26,10 @@ export class SentinelzModule {
   static register(config: SentinelzModuleConfig): DynamicModule {
     return {
       module: SentinelzModule,
-      providers: [{ provide: SENTINELZ_CONFIG, useValue: config }, SentinelzService],
+      providers: [
+        { provide: SENTINELZ_CONFIG, useValue: config },
+        SentinelzService,
+      ],
       exports: [SentinelzService],
     };
   }

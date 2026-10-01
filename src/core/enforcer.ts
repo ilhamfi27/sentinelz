@@ -2,6 +2,7 @@ import { Enforcer, newEnforcer } from 'casbin';
 import { CasbinAdapter } from '../adapters/adapter.abstract';
 import { EnforcementError, PolicyManagementError } from './errors';
 import { ISentinelz } from './enforcer.interface';
+import { PolicyFilter } from './types';
 
 /**
  * The only class application code talks to for enforcement/policy/role ops.
@@ -14,7 +15,10 @@ export class Sentinelz implements ISentinelz {
     private readonly adapter: CasbinAdapter,
   ) {}
 
-  static async init(modelPath: string, adapter: CasbinAdapter): Promise<Sentinelz> {
+  static async init(
+    modelPath: string,
+    adapter: CasbinAdapter,
+  ): Promise<Sentinelz> {
     const enforcer = await newEnforcer(modelPath, adapter);
     return new Sentinelz(enforcer, adapter);
   }
@@ -43,7 +47,10 @@ export class Sentinelz implements ISentinelz {
     }
   }
 
-  async updatePolicy(oldPolicy: string[], newPolicy: string[]): Promise<boolean> {
+  async updatePolicy(
+    oldPolicy: string[],
+    newPolicy: string[],
+  ): Promise<boolean> {
     try {
       return await this.enforcer.updatePolicy(oldPolicy, newPolicy);
     } catch (err) {
@@ -91,8 +98,24 @@ export class Sentinelz implements ISentinelz {
     await this.enforcer.loadPolicy();
   }
 
+  async loadFilteredPolicy(filter: PolicyFilter): Promise<void> {
+    try {
+      await this.enforcer.loadFilteredPolicy(filter);
+    } catch (err) {
+      throw new PolicyManagementError((err as Error).message);
+    }
+  }
+
+  isFiltered(): boolean {
+    return this.enforcer.isFiltered();
+  }
+
   async savePolicy(): Promise<void> {
-    await this.enforcer.savePolicy();
+    try {
+      await this.enforcer.savePolicy();
+    } catch (err) {
+      throw new PolicyManagementError((err as Error).message);
+    }
   }
 
   async clearPolicy(): Promise<void> {

@@ -1,7 +1,12 @@
-import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ISentinelz } from '../core/enforcer.interface';
 import { SentinelzFactory } from '../factory/sentinelz.factory';
-import { ISentinelzConfig } from '../core/types';
+import { ISentinelzConfig, PolicyFilter } from '../core/types';
 import { SENTINELZ_CONFIG } from './constants';
 
 /** Thin delegate to a `Sentinelz` instance built via `SentinelzFactory` on module init. */
@@ -9,7 +14,9 @@ import { SENTINELZ_CONFIG } from './constants';
 export class SentinelzService implements OnModuleInit, OnModuleDestroy {
   private sentinelz!: ISentinelz;
 
-  constructor(@Inject(SENTINELZ_CONFIG) private readonly config: ISentinelzConfig) {}
+  constructor(
+    @Inject(SENTINELZ_CONFIG) private readonly config: ISentinelzConfig,
+  ) {}
 
   async onModuleInit(): Promise<void> {
     this.sentinelz = await SentinelzFactory.create(this.config);
@@ -31,7 +38,10 @@ export class SentinelzService implements OnModuleInit, OnModuleDestroy {
     return this.sentinelz.removePolicy(...args);
   }
 
-  async updatePolicy(oldPolicy: string[], newPolicy: string[]): Promise<boolean> {
+  async updatePolicy(
+    oldPolicy: string[],
+    newPolicy: string[],
+  ): Promise<boolean> {
     return this.sentinelz.updatePolicy(oldPolicy, newPolicy);
   }
 
@@ -61,5 +71,13 @@ export class SentinelzService implements OnModuleInit, OnModuleDestroy {
 
   async getAllRoles(): Promise<string[]> {
     return this.sentinelz.getAllRoles();
+  }
+
+  async loadFilteredPolicy(filter: PolicyFilter): Promise<void> {
+    return this.sentinelz.loadFilteredPolicy(filter);
+  }
+
+  isFiltered(): boolean {
+    return this.sentinelz.isFiltered();
   }
 }

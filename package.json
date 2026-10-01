@@ -6,8 +6,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": {
-  "type": "git",
-  "url": "git+https://github.com/ilhamfi27/sentinelz.git"
+    "type": "git",
+    "url": "git+https://github.com/ilhamfi27/sentinelz.git"
   },
   "homepage": "https://github.com/ilhamfi27/sentinelz#readme",
   "bugs": {
@@ -65,6 +65,7 @@
     "mongoose": "^8.2.0",
     "mysql2": "^3.9.0",
     "pg": "^8.11.0",
+    "prettier": "^3.9.9",
     "redis": "^4.6.0",
     "reflect-metadata": "^0.2.1",
     "rxjs": "^7.8.1",
@@ -81,6 +82,8 @@
     "test:nestjs": "jest tests/nestjs",
     "test:integration": "jest --config jest.integration.config.js",
     "lint": "tsc --noEmit -p tsconfig.json",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "prepublishOnly": "npm run build && npm run test",
     "release": "semantic-release"
   }

@@ -18,12 +18,12 @@ Versioning, git tagging, and npm publishing are fully automated via [semantic-re
 
 The commit-analyzer plugin uses the default Angular preset:
 
-| Prefix | Version bump |
-| --- | --- |
-| `fix: ...` | patch (0.1.0 → 0.1.1) |
-| `feat: ...` | minor (0.1.0 → 0.2.0) |
-| `feat!: ...` or a footer with `BREAKING CHANGE: ...` | major (0.1.0 → 1.0.0) |
-| `docs:`, `chore:`, `refactor:`, `test:`, `style:`, `ci:`, `build:` | no release |
+| Prefix                                                             | Version bump          |
+| ------------------------------------------------------------------ | --------------------- |
+| `fix: ...`                                                         | patch (0.1.0 → 0.1.1) |
+| `feat: ...`                                                        | minor (0.1.0 → 0.2.0) |
+| `feat!: ...` or a footer with `BREAKING CHANGE: ...`               | major (0.1.0 → 1.0.0) |
+| `docs:`, `chore:`, `refactor:`, `test:`, `style:`, `ci:`, `build:` | no release            |
 
 ## Required setup (one-time, manual — outside what I can do from here)
 

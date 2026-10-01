@@ -1,4 +1,5 @@
 import { ISentinelz } from '../core/enforcer.interface';
+import { PolicyFilter } from '../core/types';
 import { cacheKey } from '../utils/cache.adapter';
 import { ICache } from './cache.interface';
 
@@ -40,7 +41,10 @@ export class CachedSentinelz implements ISentinelz {
     return result;
   }
 
-  async updatePolicy(oldPolicy: string[], newPolicy: string[]): Promise<boolean> {
+  async updatePolicy(
+    oldPolicy: string[],
+    newPolicy: string[],
+  ): Promise<boolean> {
     const result = await this.inner.updatePolicy(oldPolicy, newPolicy);
     await this.cache.invalidateAll();
     return result;
@@ -81,6 +85,15 @@ export class CachedSentinelz implements ISentinelz {
   async loadPolicy(): Promise<void> {
     await this.inner.loadPolicy();
     await this.cache.invalidateAll();
+  }
+
+  async loadFilteredPolicy(filter: PolicyFilter): Promise<void> {
+    await this.inner.loadFilteredPolicy(filter);
+    await this.cache.invalidateAll();
+  }
+
+  isFiltered(): boolean {
+    return this.inner.isFiltered();
   }
 
   async savePolicy(): Promise<void> {

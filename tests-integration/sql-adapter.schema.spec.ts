@@ -39,8 +39,12 @@ describe('SqlCasbinAdapter schema isolation (postgres)', () => {
     const knexFactory = require('knex') as (config: Knex.Config) => Knex;
     const db = knexFactory({ client: 'pg', connection: pgConnection });
     try {
-      const tenantARows = await db('sentinelz_rules').withSchema('tenant_a').select();
-      const tenantBRows = await db('sentinelz_rules').withSchema('tenant_b').select();
+      const tenantARows = await db('sentinelz_rules')
+        .withSchema('tenant_a')
+        .select();
+      const tenantBRows = await db('sentinelz_rules')
+        .withSchema('tenant_b')
+        .select();
 
       expect(tenantARows).toHaveLength(1);
       expect(tenantBRows).toHaveLength(0);

@@ -15,11 +15,13 @@ export function createAdapter(selection: AdapterSelection): CasbinAdapter {
   switch (selection.adapter) {
     case 'sql': {
       // Lazy-required so consumers who only use 'mongo' never load sql.adapter's deps.
-      const { SqlCasbinAdapter } = require('./sql.adapter') as typeof import('./sql.adapter');
+      const { SqlCasbinAdapter } =
+        require('./sql.adapter') as typeof import('./sql.adapter');
       return new SqlCasbinAdapter(selection.adapterConfig);
     }
     case 'mongo': {
-      const { MongoCasbinAdapter } = require('./mongo.adapter') as typeof import('./mongo.adapter');
+      const { MongoCasbinAdapter } =
+        require('./mongo.adapter') as typeof import('./mongo.adapter');
       return new MongoCasbinAdapter(selection.adapterConfig);
     }
     default: {

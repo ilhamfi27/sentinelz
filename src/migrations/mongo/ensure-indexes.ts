@@ -14,5 +14,8 @@ export async function ensureCasbinIndexes(
   options: EnsureCasbinIndexesOptions,
 ): Promise<void> {
   const collection = connection.collection(options.collectionName);
-  await collection.createIndex({ ptype: 1, v0: 1, v1: 1, v2: 1 }, { name: 'sentinelz_ptype_v0_v1_v2' });
+  await collection.createIndex(
+    { ptype: 1, v0: 1, v1: 1, v2: 1 },
+    { name: 'sentinelz_ptype_v0_v1_v2' },
+  );
 }

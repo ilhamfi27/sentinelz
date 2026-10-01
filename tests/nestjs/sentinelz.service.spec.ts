@@ -6,7 +6,10 @@ describe('SentinelzService', () => {
     const service = new SentinelzService({
       modelPath: path.join(__dirname, '../../src/assets/rbac_model.conf'),
       adapter: 'sql',
-      adapterConfig: { client: 'sqlite3', connection: { filename: ':memory:' } },
+      adapterConfig: {
+        client: 'sqlite3',
+        connection: { filename: ':memory:' },
+      },
     });
 
     await service.onModuleInit();

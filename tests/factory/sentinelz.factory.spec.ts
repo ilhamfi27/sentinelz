@@ -9,7 +9,10 @@ function baseConfig() {
   return {
     modelPath,
     adapter: 'sql' as const,
-    adapterConfig: { client: 'sqlite3' as const, connection: { filename: ':memory:' } },
+    adapterConfig: {
+      client: 'sqlite3' as const,
+      connection: { filename: ':memory:' },
+    },
   };
 }
 
@@ -53,7 +56,10 @@ describe('SentinelzFactory default model path', () => {
   it('enforces correctly when modelPath is omitted (falls back to the bundled RBAC model)', async () => {
     const sentinelz = await SentinelzFactory.create({
       adapter: 'sql',
-      adapterConfig: { client: 'sqlite3', connection: { filename: ':memory:' } },
+      adapterConfig: {
+        client: 'sqlite3',
+        connection: { filename: ':memory:' },
+      },
     });
 
     await sentinelz.addPolicy('alice', 'articles', 'write');

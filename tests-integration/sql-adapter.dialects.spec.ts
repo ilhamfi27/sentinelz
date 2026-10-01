@@ -39,7 +39,10 @@ describe.each<[string, SqlAdapterConfig]>([
   ],
 ])('SqlCasbinAdapter against %s', (_dialect, adapterConfig) => {
   it('migrates and enforces policies end-to-end', async () => {
-    const adapter = new SqlCasbinAdapter({ ...adapterConfig, tableName: `casbin_rule_${_dialect}` });
+    const adapter = new SqlCasbinAdapter({
+      ...adapterConfig,
+      tableName: `casbin_rule_${_dialect}`,
+    });
     await adapter.migrate();
     const sentinelz = await Sentinelz.init(modelPath, adapter);
 

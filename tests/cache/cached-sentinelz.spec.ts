@@ -16,6 +16,8 @@ function createInnerMock(enforceResult = true): jest.Mocked<ISentinelz> {
     getUsersForRole: jest.fn().mockResolvedValue([]),
     getAllRoles: jest.fn().mockResolvedValue([]),
     loadPolicy: jest.fn().mockResolvedValue(undefined),
+    loadFilteredPolicy: jest.fn().mockResolvedValue(undefined),
+    isFiltered: jest.fn().mockReturnValue(false),
     savePolicy: jest.fn().mockResolvedValue(undefined),
     clearPolicy: jest.fn().mockResolvedValue(undefined),
     migrate: jest.fn().mockResolvedValue(undefined),
@@ -93,5 +95,17 @@ describe('CachedSentinelz', () => {
 
     expect(cacheCloseSpy).toHaveBeenCalledTimes(1);
     expect(inner.close).toHaveBeenCalledTimes(1);
+  });
+
+  it('invalidates the cache after loadFilteredPolicy()', async () => {
+    const inner = createInnerMock(true);
+    const cached = new CachedSentinelz(inner, new MemoryCache());
+
+    await cached.enforce('alice', 'articles', 'write');
+    await cached.loadFilteredPolicy({ v0: ['alice'] });
+    await cached.enforce('alice', 'articles', 'write');
+
+    expect(inner.loadFilteredPolicy).toHaveBeenCalledWith({ v0: ['alice'] });
+    expect(inner.enforce).toHaveBeenCalledTimes(2);
   });
 });

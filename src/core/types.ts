@@ -24,6 +24,24 @@ export type AdapterSelection =
   | { adapter: 'sql'; adapterConfig: SqlAdapterConfig }
   | { adapter: 'mongo'; adapterConfig: MongoAdapterConfig };
 
+/**
+ * Narrows which rules `loadFilteredPolicy()` pulls into memory. Each field is
+ * a list of accepted values ("column is any of these"); fields are combined
+ * with AND, and an omitted field means no constraint. `ptype` is the rule
+ * type ('p' for policies, 'g' for role assignments); `v0`..`v5` are the rule's
+ * positional values — with the default RBAC model, `v0` is the subject,
+ * `v1` the object and `v2` the action.
+ */
+export interface PolicyFilter {
+  ptype?: string[];
+  v0?: string[];
+  v1?: string[];
+  v2?: string[];
+  v3?: string[];
+  v4?: string[];
+  v5?: string[];
+}
+
 export interface MigrateOptions {
   auto?: boolean;
 }
@@ -87,9 +105,8 @@ type CasbinRule = {
 export type CasbinRuleDoc = CasbinRule & {
   // MongoDB document ID
   _id?: string;
-}
+};
 
 export type CasbinRuleRow = CasbinRule & {
   id?: number;
 };
-

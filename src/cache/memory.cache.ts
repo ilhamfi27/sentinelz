@@ -22,7 +22,8 @@ export class MemoryCache implements ICache {
   async set(key: string, value: boolean, ttlSeconds?: number): Promise<void> {
     this.store.set(key, {
       value,
-      expiresAt: ttlSeconds !== undefined ? Date.now() + ttlSeconds * 1000 : undefined,
+      expiresAt:
+        ttlSeconds !== undefined ? Date.now() + ttlSeconds * 1000 : undefined,
     });
   }
 

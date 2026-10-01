@@ -1,29 +1,38 @@
-import type { Connection, Model as MongooseModel } from "mongoose";
-import { Helper, Model } from "casbin";
-import { CasbinAdapter } from "./adapter.abstract";
-import { CasbinRuleDoc, MongoAdapterConfig } from "../core/types";
-import { AdapterInitializationError, MigrationError } from "../core/errors";
-import { ensureCasbinIndexes } from "../migrations/mongo/ensure-indexes";
+import type { Connection, Model as MongooseModel } from 'mongoose';
+import { Helper, Model } from 'casbin';
+import { CasbinAdapter } from './adapter.abstract';
+import { CasbinRuleDoc, MongoAdapterConfig, PolicyFilter } from '../core/types';
+import {
+  AdapterInitializationError,
+  MigrationError,
+  PolicyManagementError,
+} from '../core/errors';
+import { ensureCasbinIndexes } from '../migrations/mongo/ensure-indexes';
 import {
   DEFAULT_COLLECTION_NAME,
   RULE_COLUMNS,
   RuleColumn,
-} from "../constants/db";
-import { docFromArgs } from "../utils/db.adapter";
+} from '../constants/db';
+import {
+  activeFilterEntries,
+  docFromArgs,
+  ruleToLine,
+} from '../utils/db.adapter';
 
 export class MongoCasbinAdapter extends CasbinAdapter {
   private readonly connection: Connection;
   private readonly collectionName: string;
   private readonly model: MongooseModel<CasbinRuleDoc>;
+  private filtered = false;
 
   constructor(config: MongoAdapterConfig) {
     super();
     this.collectionName = config.collectionName ?? DEFAULT_COLLECTION_NAME;
 
-    let mongoose: typeof import("mongoose");
+    let mongoose: typeof import('mongoose');
     try {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      mongoose = require("mongoose");
+      mongoose = require('mongoose');
     } catch {
       throw new AdapterInitializationError(
         'The "mongoose" package is required for the mongo adapter. Install it with `npm install mongoose`.',
@@ -43,7 +52,7 @@ export class MongoCasbinAdapter extends CasbinAdapter {
       },
       { collection: this.collectionName, versionKey: false },
     );
-    this.model = this.connection.model<CasbinRuleDoc>("CasbinRule", schema);
+    this.model = this.connection.model<CasbinRuleDoc>('CasbinRule', schema);
   }
 
   async migrate(): Promise<void> {
@@ -61,16 +70,34 @@ export class MongoCasbinAdapter extends CasbinAdapter {
   async loadPolicy(model: Model): Promise<void> {
     const docs = await this.model.find().lean();
     for (const doc of docs) {
-      const line = [doc.ptype, ...RULE_COLUMNS.map((col) => doc[col])]
-        .filter((value) => value !== undefined && value !== null)
-        .join(", ");
-      Helper.loadPolicyLine(line, model);
+      Helper.loadPolicyLine(ruleToLine(doc), model);
     }
+    this.filtered = false;
+  }
+
+  async loadFilteredPolicy(model: Model, filter: PolicyFilter): Promise<void> {
+    const query: Record<string, { $in: string[] }> = {};
+    for (const [column, values] of activeFilterEntries(filter)) {
+      query[column] = { $in: values };
+    }
+    const docs = await this.model.find(query).lean();
+    for (const doc of docs) {
+      Helper.loadPolicyLine(ruleToLine(doc), model);
+    }
+    this.filtered = true;
+  }
+
+  isFiltered(): boolean {
+    return this.filtered;
   }
 
   async savePolicy(model: Model): Promise<boolean> {
+    if (this.filtered) {
+      // deleteMany + insertMany of a filtered subset would wipe every other rule.
+      throw new PolicyManagementError('Cannot save a filtered policy');
+    }
     const docs: CasbinRuleDoc[] = [];
-    for (const sec of ["p", "g"]) {
+    for (const sec of ['p', 'g']) {
       const astMap = model.model.get(sec);
       if (!astMap) continue;
       for (const [ptype, ast] of astMap) {
@@ -110,7 +137,7 @@ export class MongoCasbinAdapter extends CasbinAdapter {
       const columnIndex = fieldIndex + i;
       if (
         value !== undefined &&
-        value !== "" &&
+        value !== '' &&
         columnIndex < RULE_COLUMNS.length
       ) {
         filter[RULE_COLUMNS[columnIndex] as RuleColumn] = value;

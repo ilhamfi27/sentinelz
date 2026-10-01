@@ -46,7 +46,10 @@ export class RedisCache implements ICache {
     await this.ready;
     let cursor = 0;
     do {
-      const result = await this.client.scan(cursor, { MATCH: `${KEY_PREFIX}*`, COUNT: 100 });
+      const result = await this.client.scan(cursor, {
+        MATCH: `${KEY_PREFIX}*`,
+        COUNT: 100,
+      });
       cursor = result.cursor;
       if (result.keys.length > 0) {
         await this.client.del(result.keys);

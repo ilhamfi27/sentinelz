@@ -2,7 +2,10 @@ import { Sentinelz } from '../core/enforcer';
 import { ISentinelz } from '../core/enforcer.interface';
 import { ISentinelzConfig } from '../core/types';
 import { createAdapter } from '../adapters/adapter-registry';
-import { parseConfigFromEnv, parseConfigFromFile } from '../utils/config.parser';
+import {
+  parseConfigFromEnv,
+  parseConfigFromFile,
+} from '../utils/config.parser';
 import { createCache } from '../cache/create-cache';
 import { CachedSentinelz } from '../cache/cached-sentinelz';
 import { defaultModelPath } from '../utils/default-model';

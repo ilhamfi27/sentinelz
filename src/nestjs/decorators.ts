@@ -9,7 +9,9 @@ export interface AbilityMetadata {
   resource: string;
 }
 
-export function CheckAbility(config: AbilityMetadata): MethodDecorator & ClassDecorator {
+export function CheckAbility(
+  config: AbilityMetadata,
+): MethodDecorator & ClassDecorator {
   return SetMetadata(ABILITY_METADATA_KEY, config);
 }
 
